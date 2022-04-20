@@ -16,46 +16,36 @@
  *
  */
 
+#ifndef   __CPP_RULE_H__
+#define   __CPP_RULE_H__
+
 /*************************************************************************************
  * Includes                                                                          *
  *************************************************************************************/
-#include "safe-link.hpp"
-#include <memory>
-#include <string>
-
-#include <iostream>
 
 /*************************************************************************************
  * Typedefs                                                                          *
  *************************************************************************************/
-class Record : NonCopyable, NonMovable
+class NonCopyable
 {
-public:
-    Record(const std::string& id, const std::string& name) :
-        m_id(id),
-        m_name(name)
-    {
-
-    }
-
-    ~Record()
-    {
-
-    }
-
-    const std::string id() const
-    {
-        return m_id;
-    }
-
-    const std::string name() const
-    {
-        return m_name;
-    }
-
 private:
-    std::string    m_id;
-    std::string    m_name;
+    NonCopyable(const NonCopyable& other) = delete;
+    NonCopyable& operator=(const NonCopyable& other) = delete;
+
+protected:
+    NonCopyable() = default;
+    ~NonCopyable() = default;
+};
+
+class NonMovable
+{
+private:
+    NonMovable(const NonMovable&& other) = delete;
+    NonMovable& operator=(const NonMovable&& other) = delete;
+
+protected:
+    NonMovable() = default;
+    ~NonMovable() = default;
 };
 
 /*************************************************************************************
@@ -70,22 +60,5 @@ private:
  * Functions                                                                         *
  *************************************************************************************/
 
-int main(void)
-{
-    SafeLink<std::shared_ptr<Record>>    safeList;
-    std::shared_ptr<Record>    x = std::make_shared<Record>("01", "one");
-    safeList.push(x);
-    safeList.push(std::make_shared<Record>("02", "two"));
 
-    std::shared_ptr<Record> first = safeList.pop();
-
-    std::cout << "id : " << first->id() << ", name : " << first->name() << std::endl;
-
-    first = safeList.pop();
-
-    std::cout << "id : " << first->id() << ", name : " << first->name() << std::endl;
-
-    return 0;
-}
-
-/* EOF */
+#endif   /*! __CPP_RULE_H__ */

@@ -16,46 +16,75 @@
  *
  */
 
+#ifndef   __SAFE_LINK_H__
+#define   __SAFE_LINK_H__
+
 /*************************************************************************************
  * Includes                                                                          *
  *************************************************************************************/
-#include "safe-link.hpp"
-#include <memory>
-#include <string>
+#include "cpp-rule.hpp"
 
-#include <iostream>
+#include <mutex>
+#include <list>
 
 /*************************************************************************************
  * Typedefs                                                                          *
  *************************************************************************************/
-class Record : NonCopyable, NonMovable
+template <class T>
+class SafeLink : private NonCopyable, private NonMovable
 {
 public:
-    Record(const std::string& id, const std::string& name) :
-        m_id(id),
-        m_name(name)
+    /**< Constructor */
+    SafeLink() : m_mutex()
     {
 
     }
 
-    ~Record()
+    /**< Destructor */
+    ~SafeLink()
     {
-
+        clear();
     }
 
-    const std::string id() const
+    /**< to push an item */
+    void push(const T& item)
     {
-        return m_id;
+        std::lock_guard<std::mutex>    lock(m_mutex);
+        m_list.push_back(item);
     }
 
-    const std::string name() const
+    /**< to pop an item */
+    T pop()
     {
-        return m_name;
+        T    front;
+        std::lock_guard<std::mutex>    lock(m_mutex);
+
+        if (!m_list.empty())
+        {
+            front = m_list.front();
+            m_list.pop_front();
+        }
+
+        return front;
+    }
+
+    /**< to clear the list */
+    void clear()
+    {
+        std::lock_guard<std::mutex>    lock(m_mutex);
+        m_list.clear();
+    }
+
+    /**< to remove an item from list */
+    void remove(const T& item)
+    {
+        std::lock_guard<std::mutex>    lock(m_mutex);
+        m_list.remove(item);
     }
 
 private:
-    std::string    m_id;
-    std::string    m_name;
+    std::mutex        m_mutex;
+    std::list<T>      m_list;
 };
 
 /*************************************************************************************
@@ -70,22 +99,5 @@ private:
  * Functions                                                                         *
  *************************************************************************************/
 
-int main(void)
-{
-    SafeLink<std::shared_ptr<Record>>    safeList;
-    std::shared_ptr<Record>    x = std::make_shared<Record>("01", "one");
-    safeList.push(x);
-    safeList.push(std::make_shared<Record>("02", "two"));
 
-    std::shared_ptr<Record> first = safeList.pop();
-
-    std::cout << "id : " << first->id() << ", name : " << first->name() << std::endl;
-
-    first = safeList.pop();
-
-    std::cout << "id : " << first->id() << ", name : " << first->name() << std::endl;
-
-    return 0;
-}
-
-/* EOF */
+#endif   /*! __SAFE_LINK_H__ */
